@@ -2,7 +2,10 @@ package com.montyhall;
 
 import static com.montyhall.Main.r;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.stream.IntStream;
 
 public class Game implements Callable<Boolean> {
 	private final Player player;
@@ -30,6 +33,12 @@ public class Game implements Callable<Boolean> {
 		//System.out.println("finalChoice: " + finalChoice);
 
 		return doors[finalChoice];
+	}
+
+	static class Host {
+		int openDoor(boolean[] doors, int chosenDoor) {
+			return IntStream.range(0, doors.length).filter(i -> !doors[i] && i != chosenDoor).findAny().getAsInt();
+		}
 	}
 
 	static abstract class Player {
@@ -60,36 +69,24 @@ public class Game implements Callable<Boolean> {
 		}
 	}
 
-	static class Host {
-		int openDoor(boolean[] doors, int chosenDoor) {
-			for (int i = 0; i < doors.length; i++) {
-				if (doors[i] == false && chosenDoor != i) return i;
-			}
-			System.out.println("Problem 3");
-			throw new RuntimeException();
-		}
-	}
-
 	interface MontyHallStrategy {
-		int makeChoice(int chosenDoor, int openedDoor);
+		int makeChoice(Integer chosenDoor, Integer openedDoor);
 	}
 
 	static class SaveSelectionStrategy implements MontyHallStrategy {
 		@Override
-		public int makeChoice(int chosenDoor, int openedDoor) {
+		public int makeChoice(Integer chosenDoor, Integer openedDoor) {
 			return chosenDoor;
 		}
 	}
 
 	static class ChangeSelectionStrategy implements MontyHallStrategy {
 		@Override
-		public int makeChoice(int chosenDoor, int openedDoor) {
-			int[] choices = {0, 1, 2};
-			for (int i = 0; i < choices.length; i++) {
-				if (choices[i] != chosenDoor && choices[i] != openedDoor) return i;
-			}
-			System.out.println("Problem 4");
-			throw new RuntimeException();
+		public int makeChoice(Integer chosenDoor, Integer openedDoor) {
+			List<Integer> availableDoors = new ArrayList<>(List.of(0, 1, 2));
+			availableDoors.remove(chosenDoor);
+			availableDoors.remove(openedDoor);
+			return availableDoors.get(0);
 		}
 	}
 }

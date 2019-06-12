@@ -1,29 +1,26 @@
 package com.montyhall;
 
+import static com.montyhall.Game.BasicPlayer;
+import static com.montyhall.Game.WisePlayer;
+import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.IntStream.range;
 
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.stream.IntStream;
 
 public class Main {
-
-	static Random r = new Random();
+	final static Random r = new Random();
 
     public static void main(String[] args) throws InterruptedException, ExecutionException {
-		Game.Player basicPlayer = new Game.BasicPlayer();
-		Game.Player wisePlayer = new Game.WisePlayer();
+		var basicPlayer = new BasicPlayer();
+		List<Game> basicPlayerGames = range(0, 10000).mapToObj(i -> new Game(basicPlayer)).collect(toList());
 
-		List<Game> gamesWithBasicPlayer = IntStream.range(0, 10000).mapToObj(i -> new Game(basicPlayer)).collect(toList());
-		List<Game> gamesWithWisePlayer = IntStream.range(0, 10000).mapToObj(i -> new Game(wisePlayer)).collect(toList());
-
-		ExecutorService basicPlayerExecutor = Executors.newFixedThreadPool(8);
-		List<Future<Boolean>> basicPlayerResults = basicPlayerExecutor.invokeAll(gamesWithBasicPlayer);
-		basicPlayerExecutor.shutdown();
+		var executor = newFixedThreadPool(8);
+		var basicPlayerResults = executor.invokeAll(basicPlayerGames);
+		executor.shutdown();
 
 		int winCount = 0;
 		int looseCount = 0;
@@ -37,10 +34,12 @@ public class Main {
 		System.out.println("Basic loses: " + looseCount);
 
 		/*-------------------------------------------------------------------------------------------------------------*/
+		var wisePlayer = new WisePlayer();
+		List<Game> wisePlayerGames = range(0, 10000).mapToObj(i -> new Game(wisePlayer)).collect(toList());
 
-		ExecutorService wisePlayerExecutor = Executors.newFixedThreadPool(8);
-		List<Future<Boolean>> wisePlayerResults = wisePlayerExecutor.invokeAll(gamesWithWisePlayer);
-		wisePlayerExecutor.shutdown();
+		executor = newFixedThreadPool(8);
+		var wisePlayerResults = executor.invokeAll(wisePlayerGames);
+		executor.shutdown();
 
 		winCount = 0;
 		looseCount = 0;
